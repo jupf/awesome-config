@@ -15,15 +15,15 @@ local function worker(args)
     local ICON_DIR      = awful.util.getdir("config").."/"..module_path.."/net_widgets/icons/"
     local timeout       = args.timeout or 5
     local font          = args.font or beautiful.font
-    local onclick       = args.onclick 
-    local hidedisconnected = args.hidedisconnected 
+    local onclick       = args.onclick
+    local hidedisconnected = args.hidedisconnected
 
     local connected = false
     local function text_grabber()
         local msg = ""
         if connected then
             for _, i in pairs(interfaces) do
-                
+
                 local map  = "N/A"
                 local inet = "N/A"
                 f = io.popen("ip addr show "..i)
@@ -34,7 +34,7 @@ local function worker(args)
                     mac  = string.match(line, "link/ether (%x?%x?:%x?%x?:%x?%x?:%x?%x?:%x?%x?:%x?%x?)") or mac
                 end
                 f:close()
-                
+
                 msg =   "<span font_desc=\""..font.."\">"..
                         "┌["..i.."]\n"..
                         "├IP:\t"..inet.."\n"..
@@ -53,7 +53,8 @@ local function worker(args)
     local function net_update()
         connected = false
         for _, i in pairs(interfaces) do
-            state = awful.util.pread("ip link show "..i.." | awk 'NR==1 {printf \"%s\", $9}'")
+            local file = assert(io.popen("ip link show "..i.." | awk 'NR==1 {printf \"%s\", $9}'"))
+            state = file:read("*all")
             if (state == "UP") then
                 connected = true
             end
@@ -90,7 +91,8 @@ local function worker(args)
 		    preset = fs_notification_preset,
 		    text = text_grabber(),
 		    timeout = t_out,
-            screen = mouse.screen
+            screen = mouse.screen,
+            position = "bottom_right",
 	    })
     end
 

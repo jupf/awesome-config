@@ -1,2 +1,2 @@
-# awesome-config
-My Awesome WM configuration
+# Awesome-Config
+My [Awesome WM 4.0](https://awesomewm.org/) Configuration

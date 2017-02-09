@@ -1,14 +1,17 @@
+-- @DOC_REQUIRE_SECTION@
+-- Standard awesome library
+gears = require("gears")
 awful = require("awful")
 require("awful.autofocus")
-awful.rules = require("awful.rules")
+-- Widget and layout library
+wibox = require("wibox")
+-- Theme handling library
 beautiful = require("beautiful")
+-- Notification library
 naughty = require("naughty")
 menubar = require("menubar")
-wibox = require("wibox")
+hotkeys_popup = require("awful.hotkeys_popup").widget
 vicious = require("vicious")
-
--- Load Debian menu entries
-require("debian.menu")
 
 -- Simple function to load additional LUA files from rc/.
 function loadrc(name, mod)
@@ -44,9 +47,11 @@ end
 
 loadrc("errors")		-- errors and debug stuff
 
--- Create cache directory
-os.execute("test -d " .. awful.util.getdir("cache") ..
-           " || mkdir -p " .. awful.util.getdir("cache"))
+-- @DOC_DEFAULT_APPLICATIONS@
+-- This is used later as the default terminal and editor to run.
+terminal = "urxvt"
+editor = os.getenv("EDITOR") or "vim"
+editor_cmd = terminal .. " -e " .. editor
 
 -- Global configuration
 modkey = "Mod4"
@@ -57,26 +62,40 @@ config.homedir = os.getenv("HOME")
 config.dir = os.getenv("HOME") .. "/.config/awesome"
 config.exec   = awful.util.spawn
 config.sexec  = awful.util.spawn_with_shell
-config.editor = "atom"--os.getenv("EDITOR") or "editor"
+config.editor = "vim"--os.getenv("EDITOR") or "editor"
 config.editor_cmd = config.terminal .. " -e " .. config.editor
 config.layouts = {
+  --  awful.layout.suit.tile,
+  --  awful.layout.suit.tile.bottom,
+  --  awful.layout.suit.fair
    awful.layout.suit.tile,
+   awful.layout.suit.tile.left,
    awful.layout.suit.tile.bottom,
-   awful.layout.suit.fair
+   awful.layout.suit.tile.top,
+   awful.layout.suit.fair,
+   awful.layout.suit.fair.horizontal,
+   awful.layout.suit.spiral,
+   awful.layout.suit.spiral.dwindle,
+   awful.layout.suit.max,
+   awful.layout.suit.max.fullscreen,
+   awful.layout.suit.magnifier,
+   awful.layout.suit.corner.nw,
+   -- awful.layout.suit.corner.ne,
+   -- awful.layout.suit.corner.sw,
+   -- awful.layout.suit.corner.se,
+   awful.layout.suit.floating,
 }
 config.tags = {
-  names  = { "one", "two", "three", "four", 5, 6},
-  layout = { config.layouts[1], config.layouts[1], config.layouts[1], config.layouts[1], config.layouts[1],
-              config.layouts[1]}
+ "1", "2", "3", "4", "5", "6", "7", "8", "9"
 }
-config.hostname = awful.util.pread('uname -n'):gsub('\n', '')
+config.hostname = assert(io.popen('uname -n')):read("*all"):gsub('\n', '')
 config.browser = "google-chrome"
 
 config.orig.quit = awesome.quit
 awesome.quit = function ()
     local scr = mouse.screen
     awful.prompt.run({prompt = "Quit (type 'yes' to confirm)? "},
-    mypromptbox[scr].widget,
+    scr.mypromptbox.widget,
     function (t)
         if string.lower(t) == 'yes' then
             config.orig.quit()
@@ -87,16 +106,17 @@ awesome.quit = function ()
     end)
 end
 
--- Remaining modules
-loadrc("xrun")			-- xrun function
-loadrc("appearance")		-- theme and appearance settings
-loadrc("start")			-- programs to run on start
-loadrc("bindings")		-- keybindings
-loadrc("wallpaper")		-- wallpaper settings
-loadrc("widgets")		-- widgets configuration
-loadrc("xlock")			-- lock screen
-loadrc("signals")		-- window manager behaviour
-loadrc("rules")			-- window rules
-loadrc("quake")			-- quake console
+-- {{{ Variable definitions
+-- @DOC_LOAD_THEME@
+-- Themes define colours, icons, font and wallpapers.
+beautiful.init(config.dir .. "/zenburn/theme.lua")
 
-root.keys(config.keys.global)
+loadrc("widgets")
+loadrc("wallpaper")
+loadrc("configuration")
+loadrc("bindings")
+loadrc("rules")
+loadrc("signals")
+loadrc("xrun")
+loadrc("start")
+loadrc("quake")

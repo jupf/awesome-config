@@ -28,7 +28,8 @@ local function worker(args)
     local net_timer = timer({ timeout = timeout })
     local signal_level = 0
     local function net_update()
-        signal_level = tonumber(awful.util.pread("awk 'NR==3 {printf \"%3.0f\" ,($3/70)*100}' /proc/net/wireless"))
+        local file = assert(io.popen("awk 'NR==3 {printf \"%3.0f\" ,($3/70)*100}' /proc/net/wireless"))
+        signal_level = tonumber(file:read("*all"))
         if signal_level == nil then
             connected = false
             net_text:set_text(" N/A ")
@@ -99,7 +100,7 @@ local function worker(args)
                 "<span font_desc=\""..font.."\">"..
                 "┌["..interface.."]\n"..
                 "├ESSID:\t\t"..essid.."\n"..
-                "├IP:\t\t\t"..inet.."\n"..
+                "├IP:\t\t"..inet.."\n"..
                 "├BSSID\t\t"..mac.."\n"..
                 ""..signal..
                 "└Bit rate:\t"..bitrate.."</span>"
@@ -127,7 +128,8 @@ local function worker(args)
 		    preset = fs_notification_preset,
 		    text = text_grabber(),
 		    timeout = t_out,
-            screen = mouse.screen
+        screen = mouse.screen,
+        position = "bottom_right",
 	    })
     end
     return widget or widgets_table

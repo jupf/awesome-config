@@ -7,7 +7,7 @@
 --  * http://awesome.naquadah.org/wiki/Nice_Icons
 
 -- {{{ Main
-theme = {}
+local theme = {}
 local home   = os.getenv("HOME")
 theme.confdir = (home .. "/.config/awesome")
 theme.wallpaper = theme.confdir .. "/zenburn/zenburn-background.png"
@@ -29,11 +29,16 @@ theme.bg_systray = theme.bg_normal
 -- }}}
 
 -- {{{ Borders
-theme.border_width  = 1
+theme.useless_gap   = 0
+theme.border_width  = 2
 theme.border_normal = "#3F3F3F"
 theme.border_focus  = "#6F6F6F"
 theme.border_marked = "#CC9393"
 -- }}}
+
+-- {{{ Titlebars
+theme.titlebar_bg_focus  = "#3F3F3F"
+theme.titlebar_bg_normal = "#3F3F3F"
 
 -- {{{ Widgets
 theme.fg_widget        = "#AECF96"
@@ -44,11 +49,6 @@ theme.fg_netup_widget  = "#7F9F7F"
 theme.fg_netdn_widget  = "#CC9393"
 theme.bg_widget        = "#3F3F3F"
 theme.border_widget    = "#3F3F3F"
--- }}}
-
--- {{{ Titlebars
-theme.titlebar_bg_focus  = "#3F3F3F"
-theme.titlebar_bg_normal = "#3F3F3F"
 -- }}}
 
 -- There are other variable sets
@@ -99,6 +99,10 @@ theme.layout_max        = theme.confdir .. "/icons/layouts/max.png"
 theme.layout_fullscreen = theme.confdir .. "/icons/layouts/fullscreen.png"
 theme.layout_magnifier  = theme.confdir .. "/icons/layouts/magnifier.png"
 theme.layout_floating   = theme.confdir .. "/icons/layouts/floating.png"
+theme.layout_cornernw   = theme.confdir .. "/icons/layouts/cornernw.png"
+theme.layout_cornerne   = theme.confdir .. "/icons/layouts/cornerne.png"
+theme.layout_cornersw   = theme.confdir .. "/icons/layouts/cornersw.png"
+theme.layout_cornerse   = theme.confdir .. "/icons/layouts/cornerse.png"
 -- }}}
 
 -- {{{ Widget icons
@@ -119,6 +123,9 @@ theme.widget_sep    = theme.confdir .. "/icons/separator.png"
 -- {{{ Titlebar icons
 theme.titlebar_close_button_focus  = theme.confdir .. "/icons/titlebar/close_focus.png"
 theme.titlebar_close_button_normal = theme.confdir .. "/icons/titlebar/close_normal.png"
+
+theme.titlebar_minimize_button_normal = theme.confdir .. "/icons/titlebar/minimize_normal.png"
+theme.titlebar_minimize_button_focus  = theme.confdir .. "/icons/titlebar/minimize_focus.png"
 
 theme.titlebar_ontop_button_focus_active    = theme.confdir .. "/icons/titlebar/ontop_focus_active.png"
 theme.titlebar_ontop_button_normal_active   = theme.confdir .. "/icons/titlebar/ontop_normal_active.png"

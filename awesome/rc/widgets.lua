@@ -1,12 +1,20 @@
 local net_widgets = require("lib/net_widgets")
 
+
+-- Keyboard map indicator and switcher
+mykeyboardlayout = awful.widget.keyboardlayout()
+
 -- {{{ Date and time
 dateicon = wibox.widget.imagebox()
 dateicon:set_image(beautiful.widget_date)
 calicon = wibox.widget.imagebox()
 calicon:set_image(beautiful.widget_org)
-local datewidget = wibox.widget.textbox()
-local clockwidget = wibox.widget.textbox()
+datewidget = wibox.widget{
+    align  = 'center',
+    valign = 'center',
+    widget = wibox.widget.textbox
+}
+clockwidget = wibox.widget.textbox()
 local clockformat = "%H:%M"
 local dateformat = "%a %d-%m"
 vicious.register(datewidget, vicious.widgets.date,
@@ -36,7 +44,8 @@ local cal = (
 	 local datespec = os.date("*t")
 	 datespec = datespec.year * 12 + datespec.month - 1 + offset
 	 datespec = (datespec % 12 + 1) .. " " .. math.floor(datespec / 12)
-	 local cal = awful.util.pread("ncal -w -m " .. datespec)
+	 local calFile = assert(io.popen("ncal -w -m " .. datespec))
+	 local cal = calFile:read('*all')
 	 -- Highlight the current date and month
 	 cal = cal:gsub("_.([%d ])",
 			string.format('<span color="%s">%%1</span>',
@@ -108,47 +117,73 @@ vicious.register(batwidget, vicious.widgets.bat, "$1$2%", 61, "BAT0")
 memicon = wibox.widget.imagebox()
 memicon:set_image(beautiful.widget_mem)
 -- Initialize widget
-membar = awful.widget.progressbar()
--- Pogressbar properties
-membar:set_vertical(true):set_ticks(true)
-membar:set_height(12):set_width(8):set_ticks_size(2)
-membar:set_background_color(beautiful.fg_off_widget)
-membar:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 },
-    stops = { { 0, beautiful.fg_widget },
-    { 0.5, beautiful.fg_center_widget }, { 1, beautiful.fg_end_widget } }})
+membar = wibox.widget {
+  {
+    widget = wibox.widget.progressbar,
+    ticks = true,
+    ticks_size = 2,
+    background_color = beautiful.fg_off_widget,
+    color = { type = "linear", from = { 0, 0 }, to = { 16, 0 },
+       stops = { { 0, beautiful.fg_widget },
+       { 0.5, beautiful.fg_center_widget }, { 1, beautiful.fg_end_widget } }},
+  },
+  forced_height = 12,
+  forced_width = 8,
+  direction     = 'east',
+  layout = wibox.container.rotate
+}
 -- Register widget
-vicious.register(membar, vicious.widgets.mem, "$1", 13)
+vicious.register(membar:get_children()[1], vicious.widgets.mem, "$1", 13)
 -- }}}
 
--- {{{ File system usage
-fsicon = wibox.widget.imagebox()
-fsicon:set_image(beautiful.widget_fs)
--- Initialize widgets
-fs = {
-	r = awful.widget.progressbar(), s = awful.widget.progressbar()
+-- -- {{{ File system usage
+fsicon = wibox.widget {
+    widget = wibox.widget.imagebox,
+    image = beautiful.widget_fs
 }
-fs_text = { }
-fs_text.root = wibox.widget.textbox(" root ")
-fs_text.share = wibox.widget.textbox(" share ")
--- Progressbar properties
-for _, w in pairs(fs) do
-  w:set_vertical(true):set_ticks(true)
-  w:set_height(14):set_width(10):set_ticks_size(2)
-  w:set_border_color(beautiful.border_widget)
-  w:set_background_color(beautiful.fg_off_widget)
-  w:set_color({ type = "linear", from = { 0, 0 }, to = { 0, 20 },
-      stops = { { 0, beautiful.fg_widget },
-      { 0.5, beautiful.fg_center_widget }, { 1, beautiful.fg_end_widget } }})
--- Register buttons
-  w:buttons(awful.util.table.join(
-    awful.button({ }, 1, function () exec("rox", false) end)
-  ))
-end -- Enable caching
+-- -- Initialize widgets
+fs_root = wibox.widget {
+    {
+      name = root,
+      widget = awful.widget.progressbar(),
+      ticks = true,
+      ticks_size = 2,
+      border_color = beautiful.border_widget,
+      background_color = beautiful.fg_off_widget,
+      color = { type = "linear", from = { 0, 0 }, to = { 16, 0 },
+            stops = { { 0, beautiful.fg_widget },
+            { 0.5, beautiful.fg_center_widget }, { 1, beautiful.fg_end_widget } }}
+    },
+    forced_height = 12,
+    forced_width = 8,
+    direction     = 'east',
+    layout = wibox.container.rotate
+}
+fs_share = wibox.widget {
+    {
+      name = share,
+      widget = awful.widget.progressbar(),
+      ticks = true,
+      ticks_size = 2,
+      border_color = beautiful.border_widget,
+      background_color = beautiful.fg_off_widget,
+      color = { type = "linear", from = { 0, 0 }, to = { 16, 0 },
+            stops = { { 0, beautiful.fg_widget },
+            { 0.5, beautiful.fg_center_widget }, { 1, beautiful.fg_end_widget } }}
+    },
+    forced_height = 12,
+    forced_width = 8,
+    direction     = 'east',
+    layout = wibox.container.rotate
+}
+fs_text = {
+  root = wibox.widget.textbox(" root "),
+  share = wibox.widget.textbox(" share ")
+}
+
 vicious.cache(vicious.widgets.fs)
--- Register widgets
-vicious.register(fs.r, vicious.widgets.fs, "${/ used_p}",     599)
-vicious.register(fs.s, vicious.widgets.fs, "${/home/share used_p}", 599)
--- }}}
+vicious.register(fs_root:get_children()[1], vicious.widgets.fs, "${/ used_p}",     599)
+vicious.register(fs_share:get_children()[1], vicious.widgets.fs, "${/home/share used_p}", 599)
 
 -- {{{ Network usage
 dnicon = wibox.widget.imagebox()
@@ -163,12 +198,6 @@ vicious.register(netwidget, vicious.widgets.net, '<span color="'
   .. beautiful.fg_netup_widget ..'">${eth0 up_kb}</span>', 3)
 -- }}}
 
-
-
--- {{{ System tray
-systray = wibox.widget.systray()
--- }}}
-
 -- {{{ Volume level
 volicon = wibox.widget.imagebox()
 volicon:set_image(beautiful.widget_vol)
@@ -181,7 +210,7 @@ alsawidget =
 	step = "5%",
 	colors =
 	{
-		unmute = "#AECF96",
+		unmute = beautiful.fg_center_widget,
 		mute = "#bd4e5d"
 	},
 	mixer = config.terminal .. " -e alsamixer", -- or whatever your preferred sound mixer is
@@ -203,11 +232,17 @@ alsawidget =
 }
 alsawidget.text = wibox.widget.textbox()
 -- widget bar
-alsawidget.bar = awful.widget.progressbar ()
-alsawidget.bar:set_width (8)
-alsawidget.bar:set_vertical (true)
-alsawidget.bar:set_background_color ("#494B4F")
-alsawidget.bar:set_color (alsawidget.colors.unmute)
+alsawidget.bar = wibox.widget {
+  {
+    widget = awful.widget.progressbar,
+    background_color = "#bd4e5d",
+    color = alsawidget.colors.unmute,
+  },
+  forced_width = 8,
+  direction     = 'east',
+  layout = wibox.container.rotate
+}
+
 alsawidget.bar:buttons (awful.util.table.join (
 	awful.button ({}, 1, function()
 		awful.util.spawn (alsawidget.mixer)
@@ -217,19 +252,19 @@ alsawidget.bar:buttons (awful.util.table.join (
                 -- You'll have to apply this to every call to 'amixer sset'.
                 awful.util.spawn ("amixer sset -c " .. alsawidget.cardnumber .. " " .. alsawidget.channel .. " toggle")
 		-- awful.util.spawn ("amixer sset " .. alsawidget.channel .. " toggle")
-		vicious.force ({ alsawidget.bar })
+		vicious.force ({ alsawidget.bar:get_children()[1] })
 	end),
 	awful.button ({}, 4, function()
 		awful.util.spawn ("amixer sset -c " .. alsawidget.cardnumber .. " "  .. alsawidget.channel .. " " .. alsawidget.step .. "+")
-		vicious.force ({ alsawidget.bar })
+		vicious.force ({ alsawidget.bar:get_children()[1] })
 	end),
 	awful.button ({}, 5, function()
 		awful.util.spawn ("amixer sset -c " .. alsawidget.cardnumber .. " "  .. alsawidget.channel .. " " .. alsawidget.step .. "-")
-		vicious.force ({ alsawidget.bar })
+		vicious.force ({ alsawidget.bar:get_children()[1] })
 	end)
 ))
 -- tooltip
-alsawidget.tooltip = awful.tooltip ({ objects = { alsawidget.bar } })
+alsawidget.tooltip = awful.tooltip ({ objects = { alsawidget.bar:get_children()[1] } })
 -- naughty notifications
 alsawidget._current_level = 0
 alsawidget._muted = false
@@ -292,7 +327,7 @@ function alsawidget:notify ()
 end
 
 -- register the widget through vicious
-vicious.register (alsawidget.bar, vicious.widgets.volume, function (widget, args)
+vicious.register (alsawidget.bar:get_children()[1], vicious.widgets.volume, function (widget, args)
 	alsawidget._current_level = args[1]
 	if args[2] == "♩"
 	then
@@ -307,7 +342,7 @@ vicious.register (alsawidget.bar, vicious.widgets.volume, function (widget, args
 	alsawidget.text:set_text(args[1] .. " ")
 	widget:set_color (alsawidget.colors.unmute)
 	return args[1]
-end, 5, alsawidget.channel .. " -c " .. alsawidget.cardnumber ) -- relatively high update time, use of keys/mouse will force update
+end, 5, "Master -c 1") -- relatively high update time, use of keys/mouse will force update
 -- }}}
 
 -- {{{ Screen brightness notification
@@ -319,7 +354,8 @@ xbacklight = {
   icon_size = 25
 }
 function xbacklight:notify ()
-	xbacklight._current_level = awful.util.pread("xbacklight")
+	xbacklight._current_level = assert(io.popen("xbacklight"))
+	xbacklight._current_level = xbacklight._current_level:read("*all")
 	xbacklight._current_level = string.format("%.0f", xbacklight._current_level)
 	local preset =
 	{
@@ -387,167 +423,4 @@ net_wired:set_widget(net_wired_widget)
 net_wired:set_left(3)
 -- }}}
 
-
-
-
---- {{{ Create a wibox for each screen and add it
-mywibox = {}
-mypromptbox = {}
-mylayoutbox = {}
-mytaglist = {}
 quakeconsole = {}
-mytaglist.buttons = awful.util.table.join(
-                    awful.button({ },         1, awful.tag.viewonly),
-                    awful.button({ modkey },  1, awful.client.movetotag),
-                    awful.button({ },         3, awful.tag.viewtoggle),
-                    awful.button({ modkey },  3, awful.client.toggletag),
-                    awful.button({ },         4, function(t) awful.tag.viewnext(awful.tag.getscreen(t)) end),
-                    awful.button({ },         5, function(t) awful.tag.viewprev(awful.tag.getscreen(t)) end)
-                    )
-mytasklist = {}
-mytasklist.buttons = awful.util.table.join(
-                     awful.button({ }, 1, function (c)
-                                              if c == client.focus then
-                                                  c.minimized = true
-                                              else
-                                                  -- Without this, the following
-                                                  -- :isvisible() makes no sense
-                                                  c.minimized = false
-                                                  if not c:isvisible() then
-                                                      awful.tag.viewonly(c:tags()[1])
-                                                  end
-                                                  -- This will also un-minimize
-                                                  -- the client, if needed
-                                                  client.focus = c
-                                                  c:raise()
-                                              end
-                                          end),
-                     awful.button({ }, 3, function ()
-                                              if instance then
-                                                  instance:hide()
-                                                  instance = nil
-                                              else
-                                                  instance = awful.menu.clients({
-                                                      theme = { width = 250 }
-                                                  })
-                                              end
-                                          end),
-                     awful.button({ }, 4, function ()
-                                              awful.client.focus.byidx(1)
-                                              if client.focus then client.focus:raise() end
-                                          end),
-                     awful.button({ }, 5, function ()
-                                              awful.client.focus.byidx(-1)
-                                              if client.focus then client.focus:raise() end
-                                          end))
-
-for s = 1, screen.count() do
-    -- Create a promptbox for each screen
-    mypromptbox[s] = awful.widget.prompt()
-    -- Create an imagebox widget which will contains an icon indicating which layout we're using.
-    -- We need one layoutbox per screen.
-    mylayoutbox[s] = awful.widget.layoutbox(s)
-    mylayoutbox[s]:buttons(awful.util.table.join(
-        awful.button({ }, 1, function () awful.layout.inc(layouts, 1) end),
-        awful.button({ }, 3, function () awful.layout.inc(layouts, -1) end),
-        awful.button({ }, 4, function () awful.layout.inc(layouts, 1) end),
-        awful.button({ }, 5, function () awful.layout.inc(layouts, -1) end)))
-    -- Create a taglist widget
-    mytaglist[s] = awful.widget.taglist(s, awful.widget.taglist.filter.all, mytaglist.buttons)
-
-    -- Create a tasklist widget
-    mytasklist[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, mytasklist.buttons)
-
-    -- Create the wibox
-    mywibox[s] = awful.wibox({      screen = s,
-        fg = beautiful.fg_normal, height = 18,
-        bg = beautiful.bg_normal, position = "top",
-        border_color = beautiful.border_focus,
-        border_width = beautiful.border_width
-    })
-
-    -- Widgets that are aligned to the left
-    local left_layout = wibox.layout.fixed.horizontal()
-    left_layout:add(mylauncher)
-    left_layout:add(mytaglist[s])
-    left_layout:add(mylayoutbox[s])
-    left_layout:add(mypromptbox[s])
-
-
-
-    -- Widgets that are aligned to the right
-    local right_layout = wibox.layout.fixed.horizontal()
-
-    right_layout:add(separator)
-
-    right_layout:add(cpuicon)
-    right_layout:add(tzswidget)
-    right_layout:add(cpugraph)
-
-    right_layout:add(separator)
-
-    right_layout:add(memicon)
-    right_layout:add(membar)
-
-    right_layout:add(separator)
-
-    right_layout:add(dnicon)
-    right_layout:add(netwidget)
-    right_layout:add(upicon)
-
-    right_layout:add(separator)
-
-		right_layout:add(fsicon)
-
-		right_layout:add(fs_text.root)
-		right_layout:add(fs.r)
-		right_layout:add(fs.s)
-		right_layout:add(fs_text.share)
-
-		right_layout:add(separator)
-
-    right_layout:add(volicon)
-    right_layout:add(alsawidget.text)
-    right_layout:add(alsawidget.bar)
-
-    right_layout:add(separator)
-
-    right_layout:add(baticon)
-    right_layout:add(batwidget)
-
-    right_layout:add(separator)
-
-		right_layout:add(net_wired)
-		right_layout:add(net_wireless)
-
-		right_layout:add(separator)
-
-		right_layout:add(calicon)
-    right_layout:add(datewidget)
-
-		right_layout:add(separator)
-
-    right_layout:add(dateicon)
-		right_layout:add(clockwidget)
-
-    right_layout:add(separator)
-
-		right_layout:add(kbdcfg.widget)
-
-
-
-    if s == 1 then
-			right_layout:add(separator)
-			right_layout:add(wibox.widget.systray())
-		end
-
-
-    -- Now bring it all together (with the tasklist in the middle)
-    local layout = wibox.layout.align.horizontal()
-    layout:set_left(left_layout)
-    layout:set_middle(mytasklist[s])
-    layout:set_right(right_layout)
-
-    mywibox[s]:set_widget(layout)
-end
--- }}}

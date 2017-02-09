@@ -10,7 +10,10 @@ local execute = {
    --"udisks-glue -p /run/user/$(id -u)/udisks-glue.pid",
    --"xset -b",	-- Disable bell
    -- Enable numlock
-   "numlockx on"
+   "numlockx on",
+
+   -- auto configure monitors
+   "/usr/local/bin/monitor_plug_startup.sh"
    -- Default browser
    --"xdg-mime default " .. config.browser .. ".desktop " ..
   --    "x-scheme-handler/http " ..
@@ -22,6 +25,7 @@ local execute = {
 }
 
 os.execute(table.concat(execute, ";"))
+
 
 -- Spawn various X programs
 xrun("telegram", "telegram -startintray")
